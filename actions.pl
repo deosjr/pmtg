@@ -44,7 +44,7 @@ priority_type(OriginalType, ActivePlayer, PriorityPlayer, Stack, Type) :-
         ActivePlayer = PriorityPlayer, Stack = [],
         Type = OriginalType
     ;
-        (ActivePlayer \= PriorityPlayer ; Stack \= []),
+        (ActivePlayer \= PriorityPlayer ; Stack = [_|_]),
         Type = instant
     ).
 
@@ -63,6 +63,7 @@ choose_card_or_pass(Type, player, Stack, Choice) :-
         Options = [],
         Choice = pass
     ;
+        Options = [_|_],
         list_to_set(Options, OptionSet),
         OptionSetPass = [pass|OptionSet],
         format("Stack: ~w\n", [Stack]),

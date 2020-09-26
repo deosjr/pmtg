@@ -2,6 +2,7 @@
 
 :- ['phases.pl'].
 :- ['cards.pl'].
+:- ['parse.pl'].
 :- ['actions.pl'].
 
 :- dynamic([life/2, hand/2, deck/2, graveyard/2, board/1]).
