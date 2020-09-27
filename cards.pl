@@ -32,13 +32,18 @@ get_card(Name) :-
     assert_card_from_json(CardJSON).
 
 assert_card_from_json(CardJSON) :-
+    (
+        get_dict(text, CardJSON, Text)
+    ;
+        Text = ""
+    ),
     type(CardJSON.type, Type),
     (
-        Type \= "land", Type \= "basic",
-        Card = card(CardJSON.name, CardJSON.manaCost, CardJSON.type, CardJSON.text)
+        Type \= land, Type \= basic,
+        Card = card(CardJSON.name, CardJSON.manaCost, CardJSON.type, Text)
     ;
-        (Type = "land"; Type = "basic"),
-        Card = card(CardJSON.name, 0, CardJSON.type, CardJSON.text)
+        (Type = land; Type = basic),
+        Card = card(CardJSON.name, 0, CardJSON.type, Text)
     ),
     assertz(Card).
 

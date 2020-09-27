@@ -7,7 +7,13 @@ rules(Name, Text, Rules) :-
     string_replace(Comma, ":", " :", Colon),
     string_replace(Colon, "\n", "@", Temp),
     split_string(Temp, "@", "", SplitNewline),
-    maplist([X,Y]>>(split_string(X, " ", " ", Split), parse_rules(Split, Y)), SplitNewline, Rules), !.
+    (
+        SplitNewline = [""],
+        Rules = []
+    ;
+        SplitNewline \= [""],
+        maplist([X,Y]>>(split_string(X, " ", " ", Split), parse_rules(Split, Y)), SplitNewline, Rules)
+    ),!.
 
 parse_rules(Split, Rules) :-
     parse_rules(Rules, Split, []).
@@ -41,6 +47,7 @@ parse_activation_cost([X|Y]) --> parse_cost(X), [","], parse_activation_cost(Y).
 parse_activation_cost([X]) --> parse_cost(X).
 parse_activation_cost([]) --> [].
 parse_cost(tap) --> ["{t}"].
+parse_cost(MC) --> [X], {mana_cost(X, MC)}.
 parse_cost(discard(1)) --> ["discard", "a", "card"].
 parse_cost(pay_life(N)) --> ["pay"], parse_number(N), ["life"].
 parse_cost(sacrifice_this) --> ["sacrifice", "cardname"].
@@ -122,10 +129,30 @@ test(mind_sculpt) :-
     rules(Name, Text, Rules),
     assertion(Rules = [mill(opponent, 7)]).
 
-test(forest) :-
+test(basic_land) :-
     Name = "Forest",
     Text = "{T}: Add {G}.",
     rules(Name, Text, Rules),
     assertion(Rules = [activated_ability([tap], add_mana([0,0,0,0,0,1]))]).
+
+test(vanilla, [true]) :-
+    Name = "Grizzly Bears",
+    Text = "",
+    rules(Name, Text, []).
+
+test(meteorite) :-
+    Name = "Meteorite",
+    Text = "When Meteorite enters the battlefield, it deals 2 damage to any target.\n{T}: Add one mana of any color.",
+    rules(Name, Text, Rules),
+    assertion(Rules = [
+        triggered_ability(etb, damage(any, 2)), 
+        activated_ability([tap], add_mana(any))
+    ]).
+
+test(thrashing_brontodon) :-
+    Name = "Thrashing Brontodon",
+    Text = "{1}, Sacrifice Thrashing Brontodon: Destroy target artifact or enchantment.",
+    rules(Name, Text, Rules),
+    assertion(Rules = [activated_ability([[1,0,0,0,0,0], sacrifice_this], destroy(or(artifact, enchantment)))]).
 
 :- end_tests(parse_card_rules).
