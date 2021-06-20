@@ -145,6 +145,12 @@ play_permanent(CardInstance) :-
     board(Board),
     update_board([CardInstance|Board]).
 
+lose_life(Player, N) :-
+    life(Player, Total),
+    NewTotal #= Total - N,
+    ( NewTotal #=< 0 -> halt
+    ; update_state(life, Player, NewTotal) ).
+
 new_card_instance(Name, Player, Instance) :-
     Instance = cardinstance(Name, Player, Player, untapped).
 

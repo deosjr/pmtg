@@ -87,9 +87,16 @@ resolve(Card, RestOfStack, NewStack) :-
         play_permanent(Card)
     ;
         (Type = sorcery ; Type = instant),
+        % TODO: hardcoded opponent as target for lava spike
+        other_player(Controller, Target),
+        resolve_effect(Rules, Target),
         put_in_graveyard(Controller, CardName)
     ),
     unchanged([RestOfStack-NewStack]).
+
+resolve_effect(Rules, Target) :-
+    % TODO: hardcoded lava spike effect
+    lose_life(Target, 3).
 
 % actions: automatic and reasoned for ai, input-based for player
 % anything with choice goes in here
@@ -133,11 +140,14 @@ clean_test :-
 
 test(sorcery) :-
     clean_test,
-    new_player([20-"Mountain"], "Player1"),
-    Card = cardinstance("Lava Spike", "Player1", "Player1", _),
+    new_player([20-"Mountain"], player),
+    new_player([20-"Island"], ai),
+    Card = cardinstance("Lava Spike", player, player, _),
     resolve(Card, Stack, NewStack),
     assertion(Stack == NewStack),
-    graveyard("Player1", Graveyard),
+    graveyard(player, Graveyard),
+    life(ai, Life),
+    assertion(Life == 17),
     assertion(Graveyard == ["Lava Spike"]).
 
 test(land) :-
