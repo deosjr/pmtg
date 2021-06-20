@@ -49,7 +49,8 @@ assert_card_from_json(CardJSON) :-
 
 card_details(Name, CMC, Type, Rules) :-
     card(Name, Cost, FullType, Text),
-    cmc(Cost, CMC),
+    mana_cost(Cost, ManaCost),
+    cmc(ManaCost, CMC),
     type(FullType, Type),
     rules(Name, Text, Rules).
 
@@ -65,7 +66,8 @@ cmc([C, W, U, B, R, G], CMC) :-
 
 % cost: colorless, w, u, b, r, g
 mana_cost(String, Cost) :-
-    split_string(String, "{", "", Split),
+    string_lower(String, Lower),
+    split_string(Lower, "{", "", Split),
     maplist([X,Y]>>(string_replace(X, "}", "", Y)), Split, [""|Mapped]),
     parse_mana_cost(Cost, Mapped, []).
 

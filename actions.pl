@@ -76,7 +76,7 @@ choose_card_or_pass(Type, ai, Stack, Choice) :-
 
 % TODO: 
 % NewStack only changes when things resolve that affect the stack
-% such as countermagic
+% such as countermagic or any triggers
 resolve(Card, RestOfStack, NewStack) :-
     Card = cardinstance(CardName, Controller, _, _),
     format("Resolving ~w\n", [CardName]),
@@ -87,7 +87,7 @@ resolve(Card, RestOfStack, NewStack) :-
         play_permanent(Card, Controller)
     ;
         (Type = sorcery ; Type = instant),
-        put_in_graveyard(CardName, Controller)
+        put_in_graveyard(Controller, CardName)
     ),
     unchanged([RestOfStack-NewStack]).
 
@@ -123,3 +123,15 @@ choose_options(Prompt, Options, Picked) :-
 write_option(Option, N, M) :-
     M #= N + 1,
     format("(~w) ~w", [N, Option]).
+
+:- begin_tests(resolve).
+
+test(stack) :-
+    new_player([20-"Mountain"], "Player1"),
+    Card = cardinstance("Lava Spike", "Player1", "Player1", _),
+    resolve(Card, Stack, NewStack),
+    assertion(Stack == NewStack),
+    graveyard("Player1", Graveyard),
+    assertion(Graveyard == ["Lava Spike"]).
+
+:- end_tests(resolve).
