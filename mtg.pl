@@ -7,13 +7,16 @@
 
 :- dynamic([life/2, hand/2, deck/2, graveyard/2, board/1]).
 
+new_board :-
+    assertz(board([])).
+
 % only 2 player games for now: You vs AI
 run :-
     PlayerDeckList = [20-"Mountain", 20-"Lava Spike"],
     AIDeckList = [20-"Island", 20-"Mind Sculpt"],
     new_player(PlayerDeckList, player),
     new_player(AIDeckList, ai),
-    assertz(board([])),
+    new_board,
     % TODO: mulligans, start at begin but skip first draw
     game(1-1, player, precombatmain).
 
@@ -137,8 +140,8 @@ put_in_graveyard(PlayerName, CardName) :-
 shuffle(Deck, Shuffled) :-
     random_permutation(Deck, Shuffled).
 
-play_permanent(CardName, PlayerName) :-
-    CardInstance = cardinstance(CardName, PlayerName, PlayerName, untapped),
+play_permanent(CardInstance) :-
+    CardInstance = cardinstance(_, _, _, untapped),
     board(Board),
     update_board([CardInstance|Board]).
 

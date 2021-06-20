@@ -84,7 +84,7 @@ resolve(Card, RestOfStack, NewStack) :-
     (
         % TODO: lands shouldnt use the stack at all!
         (Type = land ; Type = basic ; Type = creature ; Type = artifact ; Type = enchantment),
-        play_permanent(Card, Controller)
+        play_permanent(Card)
     ;
         (Type = sorcery ; Type = instant),
         put_in_graveyard(Controller, CardName)
@@ -124,14 +124,31 @@ write_option(Option, N, M) :-
     M #= N + 1,
     format("(~w) ~w", [N, Option]).
 
+clean_test :-
+    retractall(board(_)),
+    retractall(graveyard(_,_)),
+    new_board.
+
 :- begin_tests(resolve).
 
-test(stack) :-
+test(sorcery) :-
+    clean_test,
     new_player([20-"Mountain"], "Player1"),
     Card = cardinstance("Lava Spike", "Player1", "Player1", _),
     resolve(Card, Stack, NewStack),
     assertion(Stack == NewStack),
     graveyard("Player1", Graveyard),
     assertion(Graveyard == ["Lava Spike"]).
+
+test(land) :-
+    clean_test,
+    new_player([20-"Mountain"], "Player1"),
+    Card = cardinstance("Mountain", "Player1", "Player1", _),
+    resolve(Card, Stack, NewStack),
+    assertion(Stack == NewStack),
+    board(Board),
+    assertion(Board == [cardinstance("Mountain", "Player1", "Player1", untapped)]),
+    graveyard("Player1", Graveyard),
+    assertion(Graveyard == []).
 
 :- end_tests(resolve).
