@@ -71,7 +71,7 @@ choose_card_or_pass(Type, player, Stack, Choice) :-
     ).
 
 % TODO
-choose_card_or_pass(Type, ai, Stack, Choice) :-
+choose_card_or_pass(_Type, ai, _Stack, Choice) :-
     Choice = pass.
 
 % TODO: 
@@ -94,7 +94,7 @@ resolve(Card, RestOfStack, NewStack) :-
     ),
     unchanged([RestOfStack-NewStack]).
 
-resolve_effect(Rules, Target) :-
+resolve_effect(_Rules, Target) :-
     % TODO: hardcoded lava spike effect
     lose_life(Target, 3).
 

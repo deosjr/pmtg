@@ -27,7 +27,7 @@ untap(ActivePlayer) :-
     % unused mana empties from each players mana pool
     untap_all(ActivePlayer).
     
-upkeep(ActivePlayer).
+upkeep(_ActivePlayer).
     % abilities triggered during the untap step and 'at the beginning of upkeep' triggered abilities trigger
     % active player gets priority to cast instants, spells with flash, and to use activated abilities
     % unused mana empties from each players mana pool
@@ -39,18 +39,18 @@ draw(ActivePlayer) :-
     % unused mana empties from each players mana pool
     draw_card(ActivePlayer).
 
-beginning_of_combat(ActivePlayer).
+beginning_of_combat(_ActivePlayer).
     % 'at the beginning of combat' triggered abilities trigger
     % active player gets priority to cast instants, spells with flash, and to use activated abilities
     % unused mana empties from each players mana pool
 
-declare_attackers(ActivePlayer).
+declare_attackers(_ActivePlayer).
     % active player declares their attackers. if no attackers are declared, skip declare blockers and combat damage steps
     % triggered abilities that trigger off attackers being declared trigger
     % active player gets priority to cast instants, spells with flash, and to use activated abilities
     % unused mana empties from each players mana pool
 
-declare_blockers(ActivePlayer).
+declare_blockers(_ActivePlayer).
     % defending player declares their blockers and which attacking creatures they will block
     % for each attacking creature that has become blocked, the active player declares the order
     % that combat damage will be assigned to blockers.
@@ -63,7 +63,7 @@ declare_blockers(ActivePlayer).
     % if a creature is put onto the battlefield blocking, the active player declares its relative placement etc
     % unused mana empties from each players mana pool
 
-first_strike_combat_damage(ActivePlayer).
+first_strike_combat_damage(_ActivePlayer).
     % if no attacking or blocking creatures have first or double strike, then skip this substep
     % all attacking creatures with first or double strike assign combat damage to their blockers
     % all unblocked creatures with first or double strike assign combat damage to defending player or declared planeswalkers
@@ -73,16 +73,16 @@ first_strike_combat_damage(ActivePlayer).
     % active player gets priority to cast instants, spells with flash, and to use activated abilities
     % unused mana empties from each players mana pool
 
-combat_damage(ActivePlayer).
+combat_damage(_ActivePlayer).
     % exact same but for creatures without first strike (but including those with double strike!)
 
-end_of_combat(ActivePlayer).
+end_of_combat(_ActivePlayer).
     % 'at end of combat' effects trigger
     % active player gets priority to cast instants, spells with flash, and to use activated abilities
     % all creatures and planeswalkers are removed from combat
     % unused mana empties from each players mana pool
 
-pre_main_step(ActivePlayer).
+pre_main_step(_ActivePlayer).
     % 'at the beginning of next main phase' and 'at the beginning of precombat main phase' triggered abilities trigger
     % when the stack is empty, the active player gets priority to cast spells and play lands
     % unused mana empties from each players mana pool
@@ -93,7 +93,7 @@ post_main_step(ActivePlayer) :-
     % unused mana empties from each players mana pool
     action_priority(ActivePlayer, sorcery).
 
-end(ActivePlayer).
+end(_ActivePlayer).
     % 'at the beginning of the end step' or 'at the beginning of the next end step' triggered abilities trigger
     % active player gets priority to cast instants, spells with flash, and to use activated abilities
     % unused mana empties from each players mana pool

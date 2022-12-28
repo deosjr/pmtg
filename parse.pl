@@ -63,8 +63,9 @@ parse_effect(gain_life(Target, N)) --> parse_target(Target), (["gain"];["gains"]
 parse_effect(lose_life(Target, N)) --> parse_target(Target), (["lose"];["loses"]), parse_number(N), ["life"].
 parse_effect(mill(Target, N)) --> parse_target(Target), (["mill"];["mills"]), parse_number(N), ["cards"].
 parse_effect(add_mana(MC)) --> ["add", X], {mana_cost(X, MC)}.
-parse_effect(add_mana(any)) --> ["add", "one", "mana", "of", "any", "color"].
-parse_effect(add_mana_choice(X, Y)) --> ["add", X, "or", Y], {mana_cost(X), mana_cost(Y)}.
+parse_effect(add_mana(any, N)) --> ["add"], parse_number(N), ["mana", "of", "any", "color"].
+parse_effect(add_mana(any_same, N)) --> ["add"], parse_number(N), ["mana", "of", "any", "one", "color"].
+parse_effect(add_mana(or(MX, MY))) --> ["add", X, "or", Y], {mana_cost(X, MX), mana_cost(Y, MY)}.
 parse_effect(draw(you, 1)) --> ["draw", "a", "card"].
 parse_effect(draw(you, N)) --> ["draw"], parse_number(N), ["cards"].
 parse_effect(draw(Target, 1)) --> parse_target(Target), ["draws", "a", "card"].
@@ -74,6 +75,7 @@ parse_effect(discard(you, N)) --> ["discard"], parse_number(N), ["cards"].
 parse_effect(discard(Target, 1)) --> parse_target(Target), ["discards", "a", "card"].
 parse_effect(discard(Target, N)) --> parse_target(Target), ["discards"], parse_number(N), ["cards"].
 parse_effect(destroy(Target)) --> ["destroy"], parse_target(Target).
+parse_effect(counter(Target)) --> ["counter"], parse_target(Target).
 
 % replacement effects
 parse_effect(enters_tapped) --> ["cardname", "enters", "the", "battlefield", "tapped"].
@@ -93,9 +95,12 @@ parse_targetable(creature) --> ["creature"].
 parse_targetable(land) --> ["land"].
 parse_targetable(artifact) --> ["artifact"].
 parse_targetable(enchantment) --> ["enchantment"].
+parse_targetable(spell) --> ["spell"].
+parse_targetable(permanent) --> ["permanent"].
 
 parse_target_condition(is_tapped) --> ["tapped"].
 parse_target_condition(has_flying) --> ["with", "flying"].
+parse_target_condition(nonbasic) --> ["nonbasic"].
 
 % numbers
 parse_number(N) --> [NS], {number_string(N, NS), integer(N)}.
@@ -113,6 +118,7 @@ parse_mana_cost([C, W, NU, B, R, G]) --> ["u"], parse_mana_cost([C, W, U, B, R, 
 parse_mana_cost([C, W, U, NB, R, G]) --> ["b"], parse_mana_cost([C, W, U, B, R, G]), {NB #= B+1}.
 parse_mana_cost([C, W, U, B, NR, G]) --> ["r"], parse_mana_cost([C, W, U, B, R, G]), {NR #= R+1}.
 parse_mana_cost([C, W, U, B, R, NG]) --> ["g"], parse_mana_cost([C, W, U, B, R, G]), {NG #= G+1}.
+parse_mana_cost([NC, W, U, B, R, G]) --> ["c"], parse_mana_cost([C, W, U, B, R, G]), {NC #= C+1}.
 parse_mana_cost([NC, W, U, B, R, G]) --> [NS], parse_mana_cost([C, W, U, B, R, G]), {number_string(N, NS), integer(N), NC #= C+N}.
 
 :- begin_tests(parse_card_rules).
@@ -146,7 +152,7 @@ test(meteorite) :-
     rules(Name, Text, Rules),
     assertion(Rules = [
         triggered_ability(etb, damage(any, 2)), 
-        activated_ability([tap], add_mana(any))
+        activated_ability([tap], add_mana(any,1))
     ]).
 
 test(thrashing_brontodon) :-
@@ -154,5 +160,38 @@ test(thrashing_brontodon) :-
     Text = "{1}, Sacrifice Thrashing Brontodon: Destroy target artifact or enchantment.",
     rules(Name, Text, Rules),
     assertion(Rules = [activated_ability([[1,0,0,0,0,0], sacrifice_this], destroy(or(artifact, enchantment)))]).
+
+test(ancestral_recall) :-
+    Name = "Ancestral Recall",
+    Text = "Target player draws 3 cards.",
+    rules(Name, Text, Rules),
+    assertion(Rules = [draw(player,3)]).
+
+test(black_lotus) :-
+    Name = "Black Lotus",
+    Text = "{T}, Sacrifice Black Lotus: Add 3 mana of any one color.",
+    rules(Name, Text, Rules),
+    assertion(Rules = [activated_ability([tap, sacrifice_this], add_mana(any_same,3))]).
+
+test(wasteland) :-
+    Name = "Wasteland",
+    Text = "{T}: Add {C}.\n{T}, Sacrifice Wasteland: Destroy target nonbasic land.",
+    rules(Name, Text, Rules),
+    assertion(Rules = [
+        activated_ability([tap], add_mana([1,0,0,0,0,0])),
+        activated_ability([tap, sacrifice_this], destroy(conditional(land,nonbasic)))
+    ]).
+
+test(counterspell) :-
+    Name = "Counterspell",
+    Text = "Counter target spell.",
+    rules(Name, Text, Rules),
+    assertion(Rules = [counter(spell)]).
+
+test(dualland) :-
+    Name = "Tundra",
+    Text = "{T}: Add {W} or {U}.",
+    rules(Name, Text, Rules),
+    assertion(Rules = [activated_ability([tap],add_mana(or([0,1,0,0,0,0],[0,0,1,0,0,0])))]).
 
 :- end_tests(parse_card_rules).
