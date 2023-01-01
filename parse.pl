@@ -68,6 +68,8 @@ parse_ability_keyword(cant_block)   --> "cardname can't block.".
 parse_complex_keyword(R) --> "bushido ", integer(N), opt_rules_explanation,
     {format(string(S), 'whenever cardname blocks or becomes blocked, it gets +~D/+~D until end of turn.', [N,N]),
     string_codes(S,C), phrase(parse_rule(R), C)}.
+parse_complex_keyword(R) --> "prowess", opt_rules_explanation,
+    {string_codes("whenever you cast a noncreature spell, cardname gets +1/+1 until end of turn.", C), phrase(parse_rule(R), C)}.
 
 opt_rules_explanation --> ("";(" (", string_without(")", _), ")")).
 
@@ -183,6 +185,7 @@ parse_target_condition(basic)       --> "basic".
 parse_target_condition(nonbasic)    --> "nonbasic".
 parse_target_condition(C)           --> parse_color(C).
 parse_target_condition(not(C))      --> "non", parse_color(C).
+parse_target_condition(not(T))      --> "non", parse_type(T).
 parse_target_condition(attacking)   --> "attacking".
 parse_target_condition(blocking)    --> "blocking".
 parse_target_condition(attacking_or_blocking) --> "attacking or blocking".
@@ -407,6 +410,12 @@ test(replacing_keywords) :-
     Text = "Bushido 2 (Whenever this creature blocks or becomes blocked, it gets +2/+2 until end of turn.)",
     rules(Name, Text, Rules),
     assertion(Rules = [triggered_ability(blocks_or_becomes_blocked(self),stat_change(ana,2/2))]).
+
+test(monastery_swiftspear) :-
+    Name = "Monastery Swiftspear",
+    Text = "Haste\nProwess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)",
+    rules(Name, Text, Rules),
+    assertion(Rules = [keywords([haste]),triggered_ability(casts(you,any(conditional(spell,not(creature)))),stat_change(self,1/1))]).
 
 :- end_tests(parse_card_rules).
 
