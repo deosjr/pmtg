@@ -15,6 +15,7 @@ parse_rules([R|T]) --> parse_rule(R), blanks_to_nl, parse_rules(T).
 parse_rule(alternate_cost(C)) --> parse_alternate_cost(C).
 parse_rule(alternate_cost(conditional(Condition,Cost))) --> "if ", parse_condition(Condition), ", ", parse_alternate_cost(Cost).
 parse_rule(keywords(A)) --> parse_ability_keywords(A).
+parse_rule(E) --> parse_complex_keyword(E).
 parse_rule(E) --> parse_effects(E), ".", opt_rules_explanation.
 parse_rule(activated_ability(Cost, Effect)) --> parse_activation_cost(Cost), ": ", parse_effects(Effect), ".", opt_rules_explanation.
 parse_rule(activated_ability(conditional(your_turn_only,Cost), Effect)) --> parse_activation_cost(Cost), ": ", parse_effects(Effect), ". activate only during your turn.".
@@ -31,6 +32,8 @@ parse_trigger(etb(T))     --> ("when ";"whenever "), parse_target(T), " enters t
 parse_trigger(dies(T))    --> ("when ";"whenever "), parse_target(T), " dies".
 parse_trigger(attacks(T)) --> "whenever ", parse_target(T), " attacks".
 parse_trigger(blocks(T))  --> "whenever ", parse_target(T), " blocks".
+% TODO: should this parse into 2 separate triggers, one for 'blocks' and one for 'becomes blocked' ?
+parse_trigger(blocks_or_becomes_blocked(T))  --> "whenever ", parse_target(T), " blocks or becomes blocked".
 parse_trigger(tapped)     --> "whenever cardname becomes tapped".
 parse_trigger(deals_damage(self,T)) --> "whenever cardname deals damage to ", parse_target(T).
 parse_trigger(deals_combat_damage(self,T)) --> "whenever cardname deals combat damage to ", parse_target(T).
@@ -60,6 +63,11 @@ parse_ability_keyword(reach)     --> "reach".
 parse_ability_keyword(walk(L))   --> parse_basic(L), "walk".
 parse_ability_keyword(first_strike) --> "first strike".
 parse_ability_keyword(cant_block)   --> "cardname can't block.".
+
+% keywords that can be replaced with ruletext
+parse_complex_keyword(R) --> "bushido ", integer(N), opt_rules_explanation,
+    {format(string(S), 'whenever cardname blocks or becomes blocked, it gets +~D/+~D until end of turn.', [N,N]),
+    string_codes(S,C), phrase(parse_rule(R), C)}.
 
 opt_rules_explanation --> ("";(" (", string_without(")", _), ")")).
 
@@ -387,6 +395,18 @@ test(combat_damage_creature) :-
     Text = "Dripping Dead can't block.\nWhenever Dripping Dead deals combat damage to a creature, destroy that creature. It can't be regenerated.",
     rules(Name, Text, Rules),
     assertion(Rules = [keywords([cant_block]),triggered_ability(deals_combat_damage(self,any(creature)),destroy_no_regen(ana))]).
+
+test(blocks_becomes_blocked) :-
+    Name = "Goblin Elite Infantry",
+    Text = "Whenever Goblin Elite Infantry blocks or becomes blocked, it gets -1/-1 until end of turn.",
+    rules(Name, Text, Rules),
+    assertion(Rules = [triggered_ability(blocks_or_becomes_blocked(self),stat_change(ana,-1/ -1))]).
+
+test(replacing_keywords) :-
+    Name = "Jade Avenger",
+    Text = "Bushido 2 (Whenever this creature blocks or becomes blocked, it gets +2/+2 until end of turn.)",
+    rules(Name, Text, Rules),
+    assertion(Rules = [triggered_ability(blocks_or_becomes_blocked(self),stat_change(ana,2/2))]).
 
 :- end_tests(parse_card_rules).
 
